@@ -1,0 +1,7 @@
+{
+    "persona_name": "Elysia", 
+    "tone": "warm",
+    "max_response_length": 120,
+    "enable_safety": true,
+    "version": "0.1"
+}
