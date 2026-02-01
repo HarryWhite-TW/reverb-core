@@ -1,5 +1,3 @@
-﻿# Reverb Core
-
 # Reverb Core (Echo System) — v0.6 (WIP)
 
 > A contract-first, testable input preprocessing pipeline designed for robustness, traceability, and safe early failure.
@@ -181,6 +179,7 @@ This repository represents an **engineering-focused work-in-progress**, not a fi
 
 **Author**: 駿弘
 **Status**: Actively developed (v0.6)
+
 
 
 
