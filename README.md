@@ -4,7 +4,7 @@
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 
 **Reverb Core (Echo System)** is a backend-oriented engineering project focused on **input preprocessing and validation**.
 The core objective is to design a **deterministic, traceable, and testable input pipeline** that can safely handle malformed, empty, or unexpected inputs before they reach downstream logic.
@@ -15,7 +15,26 @@ This project is **not an application**, but a **foundational system component** 
 
 ---
 
-## 🎯 Motivation & Problem Statement
+## How to Read This Project (For Reviewers)
+
+This repository is not intended to be run as an application.
+Please focus on the following files and concepts:
+
+1. `src/elysia_core/input/preprocess.py`
+   - The deterministic input preprocessing pipeline
+
+2. `src/elysia_core/contracts.py`
+   - Contract-first design and shared processing result schema
+
+3. `tests/`
+   - Pytest-based validation of edge cases and failure modes
+
+You do NOT need to execute the code to review this project.
+The goal is to demonstrate engineering design, traceability, and testability.
+
+---
+
+##  Motivation & Problem Statement
 
 During backend and data-oriented system design, input handling is often treated as a secondary concern.
 However, in real-world scenarios, inputs frequently contain:
@@ -35,7 +54,7 @@ These issues typically result in:
 
 ---
 
-## 🧠 Design Principles
+##  Design Principles
 
 This project is built around the following engineering principles:
 
@@ -80,7 +99,7 @@ This prevents undefined system states and simplifies downstream assumptions.
 
 ---
 
-## 🏗️ System Architecture (v0.6)
+##  System Architecture (v0.6)
 
 ```
 Input
@@ -139,9 +158,9 @@ All tests are implemented using **pytest**, focusing on:
 
 ---
 
-## 🚧 Current Status (v0.6)
+##  Current Status (v0.6)
 
-✅ Completed:
+ Completed:
 
 * Contract definitions
 * Deterministic preprocessing pipeline
@@ -149,7 +168,7 @@ All tests are implemented using **pytest**, focusing on:
 * Early failure handling
 * Initial test coverage
 
-🚧 In Progress / Planned:
+ In Progress / Planned:
 
 * Expanded event severity rules
 * Test coverage expansion
@@ -160,7 +179,7 @@ This repository represents an **engineering-focused work-in-progress**, not a fi
 
 ---
 
-## 🧩 Intended Use Cases
+##  Intended Use Cases
 
 * Backend input validation layer
 * Preprocessing module for NLP systems
@@ -169,7 +188,7 @@ This repository represents an **engineering-focused work-in-progress**, not a fi
 
 ---
 
-## 📎 Notes for Reviewers
+##  Notes for Reviewers
 
 * This project prioritizes **engineering correctness and clarity** over feature completeness
 * The current version intentionally exposes internal structure for review and discussion
@@ -179,6 +198,7 @@ This repository represents an **engineering-focused work-in-progress**, not a fi
 
 **Author**: 駿弘
 **Status**: Actively developed (v0.6)
+
 
 
 
