@@ -194,10 +194,28 @@ This repository represents an **engineering-focused work-in-progress**, not a fi
 * The current version intentionally exposes internal structure for review and discussion
 * Design decisions are made to favor maintainability and testability
 
+
+---
+
+## Scope & Non-Goals (Current v0.6)
+
+This version intentionally focuses on:
+- Input preprocessing and validation
+- Contract-first pipeline design
+- Deterministic step-based execution with traceability
+
+Out of scope for this version:
+- Model inference or ML logic
+- Production-grade API integration
+- Performance optimization
+
+These aspects are planned for future iterations.
+
 ---
 
 **Author**: 駿弘
 **Status**: Actively developed (v0.6)
+
 
 
 
