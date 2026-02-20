@@ -1,10 +1,17 @@
 import re
+import uuid
 from elysia_core.contracts import ProcessingResult, StepEvent, ErrorItem
 
 
 print("⚡ 我是最新 preprocess.py ⚡")
 
-def preprocess_input(text: str) -> dict:
+def make_correlation_id() -> str:
+    return uuid.uuid4().hex
+#1. uuid4()：產生一個「幾乎不會重複」的隨機 ID（UUID v4）
+#2. .hex：把 UUID 轉成「只含 0-9 a-f 的 32 碼字串」，沒有破折號，方便 log、檔名、測試。
+#每次呼叫會得到像這樣的值（示意）：f2a1c9b0c8d94a4db57b2c7d41a0e3d1（32 個十六進位字元）
+
+def preprocess_input(text: str) -> ProcessingResult:
     """
     完整的輸入前處理流程：
     1. 去除前後空白
@@ -15,25 +22,47 @@ def preprocess_input(text: str) -> dict:
     6. 回傳 text + errors + reasons（處理紀錄）
     """
 
+    correlation_id = make_correlation_id()  #註解:全路徑共用，同一次呼叫只生成一次
+
     result = {
         "text": text,
-        "errors": [],
-        "reasons": []
     }
 
+    #註解:容器一定要在最前面就存在，避免後面 append 爆掉
     events: list[StepEvent] = []
     errors: list[ErrorItem] = []
 
 
     # ---------------------------------------------------------
-    # PART 0：型別防禦（非字串 → 直接 fallback）
+    # PART 0：型別防禦（非字串 → fallback，但仍回 ProcessingResult）
     # ---------------------------------------------------------
     if not isinstance(text, str):
-        return {
-            "text": "…",
-            "errors": ["輸入類型非字串，因此使用 fallback"],
-            "reasons": ["fallback"]
-        }
+        errors.append(
+            ErrorItem(
+                code="UNEXPECTED_TYPE",
+                message="輸入類型非字串，已使用 fallback",
+                step="type_guard",
+                severity="warn",
+            )
+        )
+        events.append(
+            StepEvent(
+                name="type_guard",
+                severity="warn",
+                changed=True,
+                note="非字串輸入，使用 fallback 並提前終止",
+                before=text,
+                after="…",
+            )
+        )
+        return ProcessingResult(
+            correlation_id=correlation_id,
+            original_input=text,
+            processed_text="…",
+            is_valid=False,
+            events=events,
+            errors=errors,
+        )
 
     # -----------------------------------------
     # PART 1：strip 前後空白（step 化）
@@ -109,7 +138,7 @@ def preprocess_input(text: str) -> dict:
        )
 
        return ProcessingResult(
-           correlation_id="local-dev",
+           correlation_id=correlation_id,
            original_input=text,
            processed_text=result["text"],
            is_valid=False,
@@ -132,11 +161,12 @@ def preprocess_input(text: str) -> dict:
     events.append(event)
 
     return ProcessingResult(
-        correlation_id="local-dev",
+        correlation_id=correlation_id,
         original_input=text,
         processed_text=result["text"],
         is_valid=True,
         events=events,
+        errors=errors,
     )
 
 
