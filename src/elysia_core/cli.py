@@ -7,8 +7,7 @@ def main():
     args = sys.argv[1:]
 
     if not args:
-        print("No input provided.")
-        sys.exit(1)
+        args = [""]
 
     use_json = False
 
@@ -40,7 +39,7 @@ def main():
     else:
         print("Processed:", result.processed_text)
         print("Valid:", result.is_valid)
-        print("Errors:", result.errors)
+        print("Errors:", [e.code for e in result.errors])
         print("Correlation ID:", result.correlation_id)
         print("Events:")
         for ev in result.events:

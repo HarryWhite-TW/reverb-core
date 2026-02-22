@@ -19,8 +19,8 @@ class StepEvent:   #StepEvent:「過程中發生了什麼」
     severity: Severity  #嚴重性(info / warn / error)
     changed: bool  #有沒有改動
     note: str  #補充說明
-    before: Optional[Any] = None  #改動前
-    after: Optional[Any] = None  #改動後
+    before: Optional[str] = None  #改動前
+    after: Optional[str] = None  #改動後
 
 
 

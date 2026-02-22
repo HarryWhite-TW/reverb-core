@@ -1,5 +1,6 @@
 import re
 import uuid
+from typing import Any
 from elysia_core.contracts import ProcessingResult, StepEvent, ErrorItem
 
 
@@ -9,7 +10,7 @@ def make_correlation_id() -> str:
 #2. .hex：把 UUID 轉成「只含 0-9 a-f 的 32 碼字串」，沒有破折號，方便 log、檔名、測試。
 #每次呼叫會得到像這樣的值（示意）：f2a1c9b0c8d94a4db57b2c7d41a0e3d1（32 個十六進位字元）
 
-def preprocess_input(text: str) -> ProcessingResult:
+def preprocess_input(text: Any) -> ProcessingResult:
     """
     完整的輸入前處理流程：
     1. 去除前後空白
@@ -106,7 +107,7 @@ def preprocess_input(text: str) -> ProcessingResult:
     events.append(event)
 
     # -----------------------------------------
-    # PART 4：fallback_if_empty（空字串/None）
+    # PART 4：fallback_if_empty（空字串/空白字串）
     # -----------------------------------------
 
     fb = fallback_if_empty(result["text"])
@@ -236,18 +237,9 @@ def symbol_cleaner(text: str) -> str:
 # fallback_if_empty: 處理 None 或空字串
 # ---------------------------------------------------------
 def fallback_if_empty(text: str) -> dict:
-    if text is None or str(text).strip() == "":
-        return {
-            "text": "…",
-            "errors": ["輸入為空，因此使用 fallback"],
-            "reason": "fallback"
-        }
-
-    return {
-        "text": text,
-        "errors": [],
-        "reason": "normal"
-    }
+    if str(text).strip() == "":
+        return {"text": "…", "reason": "fallback"}
+    return {"text": text, "reason": "normal"}
 
 
 # ---------------------------------------------------------
