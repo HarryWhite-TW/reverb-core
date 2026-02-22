@@ -187,5 +187,3 @@ Coverage target: ≥ 85%
 
 **Author**: 駿弘
 **Status**: Actively developed — v0.6
-你快完成了。
-而且是靠自己完成的。
