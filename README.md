@@ -1,105 +1,59 @@
-# Reverb Core (Echo System) — v0.6 (WIP)
+# 🔹 Reverb Core — Deterministic Input Guardrail Layer (v0.6)
 
-> A contract-first, testable input preprocessing pipeline designed for robustness, traceability, and safe early failure.
-
----
-
-##  Project Overview
-
-**Reverb Core (Echo System)** is a backend-oriented engineering project focused on **input preprocessing and validation**.
-The core objective is to design a **deterministic, traceable, and testable input pipeline** that can safely handle malformed, empty, or unexpected inputs before they reach downstream logic.
-
-This project is **not an application**, but a **foundational system component** intended to be embedded into larger services such as APIs, NLP systems, or backend processing pipelines.
-
-> Current status: **v0.6 (Work in Progress)**
+> A contract-driven, deterministic input preprocessing layer designed to make system behavior observable, traceable, and safe.
 
 ---
 
-## How to Read This Project (For Reviewers)
+## Overview
 
-This repository is not intended to be run as an application.
-Please focus on the following files and concepts:
+**Reverb Core** is a backend-oriented engineering project focused on building a deterministic and contract-first input preprocessing pipeline.
 
-1. `src/elysia_core/input/preprocess.py`
-   - The deterministic input preprocessing pipeline
+The system ensures that:
 
-2. `src/elysia_core/contracts.py`
-   - Contract-first design and shared processing result schema
-
-3. `tests/`
-   - Pytest-based validation of edge cases and failure modes
-
-You do NOT need to execute the code to review this project.
-The goal is to demonstrate engineering design, traceability, and testability.
-
----
-
-##  Motivation & Problem Statement
-
-During backend and data-oriented system design, input handling is often treated as a secondary concern.
-However, in real-world scenarios, inputs frequently contain:
-
-* Unexpected data types
-* Empty or partially malformed content
-* Irregular symbols or formatting noise
-* Edge cases that silently break downstream logic
-
-These issues typically result in:
-
-* Hidden bugs
-* Untraceable failures
-* Difficulty in testing and regression validation
-
-**Reverb Core** was created to address this gap by providing a **strict, observable, and contract-driven input preprocessing layer**.
-
----
-
-##  Design Principles
-
-This project is built around the following engineering principles:
-
-### 1. Contract-First Design
-
-All processing results conform to a predefined contract:
-
-* `ProcessingResult` — the unified output envelope
-* `StepEvent` — structured event records for each pipeline step
-* `ErrorItem` — structured error representation (code / severity / step)
-
-This ensures that:
-
-* Output shape is deterministic
+* All inputs return a structured `ProcessingResult`
+* Every processing step emits a traceable `StepEvent`
 * Errors are explicit and machine-readable
-* Behavior is testable and traceable
+* No unexpected exceptions escape the system
+* The pipeline behavior is deterministic and predictable
+
+This project is not an application.
+It is a **foundational guardrail component** designed to be embedded into larger backend systems, APIs, or NLP pipelines.
 
 ---
 
-### 2. Deterministic Pipeline Architecture
+## Core Guarantees
 
-Each preprocessing operation is modeled as an isolated **step** within a linear pipeline.
+Reverb v0.6 enforces the following invariants:
 
-Key characteristics:
+*  Always returns `ProcessingResult`
+*  Every step produces a `StepEvent`
+*  Errors are structured (`ErrorItem`)
+*  Deterministic step order
+*  Early failure for invalid inputs
+*  No silent failure paths
 
-* Each step receives an input and returns an output
-* Changes are detected automatically (`before != after`)
-* Side effects are recorded as structured events
-* The pipeline can safely terminate early when required
-
----
-
-### 3. Explicit Failure & Early Return
-
-Instead of allowing invalid inputs to propagate:
-
-* Empty or invalid inputs trigger **early termination**
-* The pipeline returns a structured failure result
-* Errors and events remain fully observable
-
-This prevents undefined system states and simplifies downstream assumptions.
+Same input → Same output.
 
 ---
 
-##  System Architecture (v0.6)
+## Deterministic Pipeline (v0.6)
+
+Fixed execution order:
+
+1. Type Validation (`type_guard`)
+2. Strip Whitespace (`strip_spaces`)
+3. Trim Edges (`trim_edges`)
+4. Collapse Spaces (`collapse_spaces`)
+5. Fallback Handling (`fallback_if_empty`)
+   ↳ Early return if triggered
+6. Symbol Cleaning (`symbol_cleaner`)
+7. Final `ProcessingResult`
+
+The pipeline is linear, predictable, and side-effect transparent.
+
+---
+
+## Architecture
 
 ```
 Input
@@ -117,107 +71,121 @@ symbol_cleaner        │
 ProcessingResult ◀────┘
 ```
 
-### Core Components
+---
 
-* **Pipeline Orchestrator**
+## Quick Start
 
-  * Coordinates execution order
-  * Collects events and errors
-  * Produces the final `ProcessingResult`
+### Run Locally
 
-* **Step Runner (`run_step`)**
+```bash
+python -m elysia_core.cli "Hello   world!!"
+```
 
-  * Wraps processing logic
-  * Detects state changes
-  * Emits standardized `StepEvent`
+### Run with JSON Output
 
-* **Fallback Handler**
+```bash
+python -m elysia_core.cli --json "Hello   world!!"
+```
 
-  * Detects empty or invalid input
-  * Triggers early termination
-  * Emits warning-level error and event
+### Run with Docker
+
+```bash
+docker build -t reverb .
+docker run --rm reverb "Hello   world!!"
+docker run --rm reverb --json "Hello   world!!"
+```
 
 ---
 
-## 🧪 Testing Strategy
+## Example Output (JSON Mode)
 
-Testing is treated as a **specification lock**, not a post-process.
+```json
+{
+  "processed_text": "Hello world！",
+  "is_valid": true,
+  "errors": [],
+  "events": [
+    {
+      "name": "strip_spaces",
+      "changed": false,
+      "severity": "info"
+    },
+    {
+      "name": "collapse_spaces",
+      "changed": true,
+      "severity": "info"
+    }
+  ],
+  "correlation_id": "bc7b9bfdb1be4e51bd9a80cedfea7ddc"
+}
+```
 
-Current test coverage includes:
+---
+
+## Edge Case Handling
+
+| Case | Input                    | Processed_text | is_valid | Errors (codes)    | Notes                                     |
+| ---- | ------------------------ | -------------- | -------- | ----------------- | ----------------------------------------- |
+| 01   | `""`                     | `…`            | False    | `EMPTY_INPUT`     | Empty string triggers fallback            |
+| 02   | `None`                   | `…`            | False    | `UNEXPECTED_TYPE` | Non-string intercepted by type_guard      |
+| 03   | `" "`                    | `…`            | False    | `EMPTY_INPUT`     | Whitespace-only becomes empty after strip |
+| 04   | `"Hello world"`          | `Hello world`  | True     | None              | No transformation needed                  |
+| 05   | `" Hello world "`        | `Hello world`  | True     | None              | Leading/trailing whitespace removed       |
+| 06   | `"***Hello world!!!***"` | `Hello world！` | True     | None              | Edge trimming + symbol normalization      |
+| 07   | `"Hello... world"`       | `Hello… world` | True     | None              | Ellipsis normalized                       |
+| 08   | `"Hello......"`          | `Hello…`       | True     | None              | Multiple dots collapsed                   |
+| 09   | `"What!!??"`             | `What！？`       | True     | None              | Mixed punctuation normalized              |
+| 10   | `123`                    | `…`            | False    | `UNEXPECTED_TYPE` | Type guard prevents propagation           |
+
+---
+
+## Testing Strategy
+
+Testing is treated as specification enforcement.
 
 * Contract shape validation
-* Early-return behavior for empty inputs
-* Step-level behavior consistency
-* Regression safety for preprocessing logic
+* Deterministic output validation
+* Early-return behavior
+* Regression protection for preprocessing logic
 
-All tests are implemented using **pytest**, focusing on:
+Run tests:
 
-* Deterministic outputs
-* Explicit failure modes
-* Contract stability
+```bash
+pytest -q
+```
 
----
-
-##  Current Status (v0.6)
-
- Completed:
-
-* Contract definitions
-* Deterministic preprocessing pipeline
-* Structured event & error tracking
-* Early failure handling
-* Initial test coverage
-
- In Progress / Planned:
-
-* Expanded event severity rules
-* Test coverage expansion
-* Minimal CLI interface for demonstration
-* Documentation refinement
-
-This repository represents an **engineering-focused work-in-progress**, not a finished product.
+Coverage target: ≥ 85%
 
 ---
 
-##  Intended Use Cases
+## Scope & Non-Goals (v0.6)
+
+### In Scope
+
+* Input preprocessing and validation
+* Contract-first architecture
+* Deterministic step execution
+* Structured traceability
+
+### Out of Scope
+
+* ML model inference
+* API server implementation
+* Performance optimization
+* Production deployment
+
+---
+
+## Intended Use Cases
 
 * Backend input validation layer
-* Preprocessing module for NLP systems
-* Guardrail component for APIs
-* Engineering practice project emphasizing system design, contracts, and testability
-
----
-
-##  Notes for Reviewers
-
-* This project prioritizes **engineering correctness and clarity** over feature completeness
-* The current version intentionally exposes internal structure for review and discussion
-* Design decisions are made to favor maintainability and testability
-
-
----
-
-## Scope & Non-Goals (Current v0.6)
-
-This version intentionally focuses on:
-- Input preprocessing and validation
-- Contract-first pipeline design
-- Deterministic step-based execution with traceability
-
-Out of scope for this version:
-- Model inference or ML logic
-- Production-grade API integration
-- Performance optimization
-
-These aspects are planned for future iterations.
+* NLP preprocessing module
+* API guardrail component
+* Engineering design demonstration
 
 ---
 
 **Author**: 駿弘
-**Status**: Actively developed (v0.6)
-
-
-
-
-
-
+**Status**: Actively developed — v0.6
+你快完成了。
+而且是靠自己完成的。
