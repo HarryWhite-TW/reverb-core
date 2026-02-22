@@ -3,8 +3,6 @@ import uuid
 from elysia_core.contracts import ProcessingResult, StepEvent, ErrorItem
 
 
-print("⚡ 我是最新 preprocess.py ⚡")
-
 def make_correlation_id() -> str:
     return uuid.uuid4().hex
 #1. uuid4()：產生一個「幾乎不會重複」的隨機 ID（UUID v4）
@@ -34,7 +32,7 @@ def preprocess_input(text: str) -> ProcessingResult:
 
 
     # ---------------------------------------------------------
-    # PART 0：型別防禦（非字串 → fallback，但仍回 ProcessingResult）
+    # PART 0：type_guard型別防禦（非字串 → fallback，但仍回 ProcessingResult）
     # ---------------------------------------------------------
     if not isinstance(text, str):
         errors.append(
@@ -115,7 +113,6 @@ def preprocess_input(text: str) -> ProcessingResult:
 
     result["text"] = fb["text"]
 
-    #註解:先做最小事件紀錄：只記 fallback
     if fb["reason"] == "fallback":
        errors.append(
            ErrorItem(
