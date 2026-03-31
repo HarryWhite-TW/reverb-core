@@ -1,3 +1,4 @@
+````md
 # Reverb Core — Deterministic Input Guardrail Layer (v0.6)
 
 > A contract-first, deterministic input preprocessing layer designed to make system behavior observable, traceable, and safe.
@@ -46,8 +47,7 @@ Execution order:
 6. Symbol normalization
 7. Final `ProcessingResult`
 
-```
-
+```text
 Input
 ↓
 strip_spaces
@@ -58,10 +58,9 @@ collapse_spaces
 ↓
 fallback_if_empty ──┐ (early return if triggered)
 ↓                  │
-symbol_cleaner        │
+symbol_cleaner     │
 ↓                  │
-ProcessingResult ◀────┘
-
+ProcessingResult ◀─┘
 ````
 
 ---
@@ -72,7 +71,7 @@ ProcessingResult ◀────┘
 
 ```bash
 python -m elysia_core.cli "Hello   world!!"
-````
+```
 
 ### Run in JSON mode
 
@@ -86,6 +85,46 @@ python -m elysia_core.cli --json "Hello   world!!"
 docker build -t reverb .
 docker run --rm reverb --json "Hello   world!!"
 ```
+
+---
+
+## Representative CLI Demo Cases
+
+### Valid processing with whitespace collapse + symbol normalization
+
+```bash
+python -m elysia_core.cli "Hello   world!!"
+```
+
+Expected behavior:
+
+* `collapse_spaces` changes internal spacing
+* `symbol_cleaner` normalizes repeated punctuation
+* output remains valid
+
+### Mixed punctuation normalization in JSON mode
+
+```bash
+python -m elysia_core.cli --json "What!!??"
+```
+
+Expected behavior:
+
+* `symbol_cleaner` normalizes mixed punctuation
+* output becomes `What！？`
+* result remains valid with no errors
+
+### Empty / whitespace-only fallback in JSON mode
+
+```bash
+python -m elysia_core.cli --json "   "
+```
+
+Expected behavior:
+
+* `fallback_if_empty` is triggered
+* output becomes `…`
+* result is invalid with warning-level fallback behavior
 
 ---
 
@@ -173,6 +212,16 @@ Testing focuses on:
 * Deterministic step ordering
 * Edge case regression safety
 
+### Regression / Boundary Notes
+
+A permanent regression test was added for early-return behavior:
+when `fallback_if_empty` is triggered, the pipeline must stop before `symbol_cleaner`.
+
+CLI boundary was also confirmed:
+`python -m elysia_core.cli --json 123` does not test non-string handling,
+because CLI argv input is passed as string. Non-string `type_guard` behavior
+must be validated at the `preprocess_input()` / pytest level instead.
+
 ---
 
 ## Scope (v0.6)
@@ -194,7 +243,7 @@ Out of scope:
 
 ## Project Structure
 
-```
+```text
 src/
   elysia_core/
     contracts.py
