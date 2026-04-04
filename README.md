@@ -224,6 +224,27 @@ must be validated at the `preprocess_input()` / pytest level instead.
 
 ---
 
+### Docker Verification
+
+The Docker image was verified against local CLI behavior using representative JSON cases.
+
+Validated commands:
+
+```bash
+docker build --no-cache -t reverb .
+docker run --rm reverb --json "What!!??"
+docker run --rm reverb --json "   "
+```
+
+Verified behavior:
+
+Docker image builds successfully from the project root
+Docker output matches local CLI behavior for symbol normalization
+Docker output matches local CLI behavior for empty-input fallback
+The container demo is reproducible for representative valid and invalid cases
+
+---
+
 ## Scope (v0.6)
 
 This version focuses strictly on:

@@ -1,0 +1,26 @@
+
+.venv
+#不要把你本機虛擬環境送進 Docker build。
+
+__pycache__/
+#不要把 Python 執行快取送進去。
+
+.pytest_cache/
+#不要把 pytest 暫存結果送進去。
+
+.git
+#不要把 Git 歷史整包送進 Docker context。
+
+.gitignore
+#容器執行通常不需要它。
+
+README.md
+#這個 image 目前只是跑 CLI demo，不需要 README。
+
+tests/
+#如果容器目前不是拿來跑測試，那測試檔先不用進 image。
+
+*.pyc
+*.pyo
+*.pyd
+#如果容器目前不是拿來跑測試，那測試檔先不用進 image。
