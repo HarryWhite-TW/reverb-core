@@ -9,6 +9,8 @@
 
 **Reverb Core** is a backend-oriented engineering project focused on building a deterministic and contract-first input preprocessing pipeline.
 
+`Reverb` / `Reverb Core` is the public project name, while `elysia_core` is the current Python package and module path.
+
 It is not an application.
 
 It is a foundational guardrail component designed to sit before APIs, NLP systems, or backend services to ensure:
@@ -66,6 +68,8 @@ ProcessingResult ◀─┘
 ---
 
 ## Quick Start
+
+The CLI is currently invoked through the `elysia_core` module path.
 
 ### Run locally
 
@@ -188,6 +192,7 @@ Expected behavior:
 * `ErrorItem`
 
 All outputs conform strictly to the defined contract schema.
+Contract types are currently defined in `src/elysia_core/contracts.py`.
 
 ### Step Runner
 
@@ -211,6 +216,31 @@ Testing focuses on:
 * Early return behavior
 * Deterministic step ordering
 * Edge case regression safety
+
+Current test layers:
+
+* `01_unit`
+* `02_integration`
+* `03_contract`
+* `04_e2e`
+
+---
+
+### Public API Surface Coverage
+
+The public API surface of `preprocess_input()` is protected with representative contract-level tests for:
+
+* valid input
+* empty / fallback input
+* non-string input
+
+These tests freeze the minimum stable surface of `ProcessingResult` and verify that:
+
+* the result always returns a stable contract
+* core fields remain present and type-stable
+* representative `events` / `errors` remain observable across major input categories
+
+---
 
 ### Regression / Boundary Notes
 
@@ -266,12 +296,14 @@ Out of scope:
 
 ```text
 src/
-  elysia_core/
-    contracts.py
-    cli.py
-    input/preprocess.py
-
+  elysia_core/contracts.py
+  elysia_core/cli.py
+  elysia_core/input/preprocess.py
 tests/
+  01_unit/
+  02_integration/
+  03_contract/
+  04_e2e/
 Dockerfile
 README.md
 ```
