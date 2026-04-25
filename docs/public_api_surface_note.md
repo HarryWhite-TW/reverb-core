@@ -53,3 +53,19 @@
 - 未來若建立 adapter / SDK 外部接法，應如何維持目前的 `ProcessingResult` contract
 
 目前這份 note 的重點不是完整定義未來 SDK，而是先把已經測試保護、已經相對穩定的最小 public surface 說清楚。
+
+## 6. 對照檢查
+
+這份 note 的內容需要和目前的 contract、測試檔保持一致。
+
+目前先確認以下最小對照：
+
+| 文件中的承諾 | 程式來源 | 測試來源 | 目前判斷 |
+| --- | --- | --- | --- |
+| `preprocess_input(...)` 會回傳 `ProcessingResult` | `src/elysia_core/contracts.py` | `tests/03_contract/test_public_api_surface.py` | 已對齊 |
+| `processed_text` 一定存在，且型別為字串 | `ProcessingResult` | `test_public_api_surface.py` | 已對齊 |
+| `is_valid` 一定存在，且型別為布林值 | `ProcessingResult` | `test_public_api_surface.py` | 已對齊 |
+| `events` 一定存在，且型別為 list | `ProcessingResult` | `test_public_api_surface.py` | 已對齊 |
+| `errors` 一定存在，且型別為 list | `ProcessingResult` | `test_public_api_surface.py` | 已對齊 |
+
+這段對照的目的，是避免文件承諾超過目前 code 與 tests 實際保護的範圍。
