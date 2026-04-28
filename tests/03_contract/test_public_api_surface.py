@@ -59,3 +59,23 @@ def test_preprocess_input_returns_stable_processing_result_surface_for_non_strin
     assert all(isinstance(err, ErrorItem) for err in result.errors)
     assert any(err.code == "UNEXPECTED_TYPE" for err in result.errors)
     assert any(ev.name == "type_guard" for ev in result.events)
+
+def test_processing_result_exposes_minimum_public_fields():
+    result = preprocess_input("Hello")
+
+    assert hasattr(result, "correlation_id")
+    assert hasattr(result, "original_input")
+    assert hasattr(result, "processed_text")
+    assert hasattr(result, "is_valid")
+    assert hasattr(result, "events")
+    assert hasattr(result, "errors")
+
+    assert isinstance(result.processed_text, str)
+    assert isinstance(result.is_valid, bool)
+    assert isinstance(result.events, list)
+    assert isinstance(result.errors, list)
+    assert isinstance(result.correlation_id, str)
+
+    assert result.original_input == "Hello"
+
+    assert all(isinstance(ev, StepEvent) for ev in result.events)
