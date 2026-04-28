@@ -79,3 +79,39 @@ def test_processing_result_exposes_minimum_public_fields():
     assert result.original_input == "Hello"
 
     assert all(isinstance(ev, StepEvent) for ev in result.events)
+
+def test_step_event_exposes_minimum_observable_fields():
+    result = preprocess_input("Hello!!")
+
+    assert result.events != []
+
+    ev = result.events[0]
+
+    assert hasattr(ev, "name")
+    assert hasattr(ev, "severity")
+    assert hasattr(ev, "changed")
+
+    assert isinstance(ev.name, str)
+    assert ev.severity in ("info", "warn", "error")
+    assert isinstance(ev.changed, bool)
+
+def test_error_item_exposes_minimum_machine_readable_fields():
+    result = preprocess_input("   ")
+
+    assert result.errors != []
+
+    err = result.errors[0]
+
+    assert hasattr(err, "code")
+    assert hasattr(err, "message")
+    assert hasattr(err, "step")
+    assert hasattr(err, "severity")
+
+    assert isinstance(err.code, str)
+    assert isinstance(err.message, str)
+    assert isinstance(err.step, str)
+    assert err.severity in ("info", "warn", "error")
+
+    assert err.code == "EMPTY_INPUT"
+    assert err.step == "fallback_if_empty"
+
