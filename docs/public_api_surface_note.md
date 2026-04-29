@@ -62,10 +62,14 @@
 
 | 文件中的承諾 | 程式來源 | 測試來源 | 目前判斷 |
 | --- | --- | --- | --- |
-| `preprocess_input(...)` 會回傳 `ProcessingResult` | `src/elysia_core/contracts.py` | `tests/03_contract/test_public_api_surface.py` | 已對齊 |
-| `processed_text` 一定存在，且型別為字串 | `ProcessingResult` | `test_public_api_surface.py` | 已對齊 |
-| `is_valid` 一定存在，且型別為布林值 | `ProcessingResult` | `test_public_api_surface.py` | 已對齊 |
-| `events` 一定存在，且型別為 list | `ProcessingResult` | `test_public_api_surface.py` | 已對齊 |
-| `errors` 一定存在，且型別為 list | `ProcessingResult` | `test_public_api_surface.py` | 已對齊 |
+| `preprocess_input(...)` 會回傳 `ProcessingResult` | `src/elysia_core/input/preprocess.py` / `ProcessingResult` | `test_preprocess_input_returns_stable_processing_result_surface_for_valid_input` | 已對齊 |
+| `correlation_id` 一定存在，且型別為字串 | `ProcessingResult` | `test_processing_result_exposes_minimum_public_fields` | 已對齊 |
+| `original_input` 會保留原始輸入 | `ProcessingResult` | `test_processing_result_exposes_minimum_public_fields` | 已對齊 |
+| `processed_text` 一定存在，且型別為字串 | `ProcessingResult` | `test_processing_result_exposes_minimum_public_fields` | 已對齊 |
+| `is_valid` 一定存在，且型別為布林值 | `ProcessingResult` | `test_processing_result_exposes_minimum_public_fields` | 已對齊 |
+| `events` 一定存在，且型別為 list | `ProcessingResult` | `test_processing_result_exposes_minimum_public_fields` | 已對齊 |
+| `errors` 一定存在，且型別為 list | `ProcessingResult` | `test_processing_result_exposes_minimum_public_fields` | 已對齊 |
+| `StepEvent` 至少保留 `name / severity / changed` | `StepEvent` | `test_step_event_exposes_minimum_observable_fields` | 已對齊 |
+| `ErrorItem` 至少保留 `code / message / step / severity` | `ErrorItem` | `test_error_item_exposes_minimum_machine_readable_fields` | 已對齊 |
 
 這段對照的目的，是避免文件承諾超過目前 code 與 tests 實際保護的範圍。
