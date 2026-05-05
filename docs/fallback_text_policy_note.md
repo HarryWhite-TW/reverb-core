@@ -60,7 +60,27 @@
 - `fallback_text` 是否應同時影響 `type_guard` 與 `fallback_if_empty`
 - 未來測試應放在 unit、contract，還是 integration 層
 
-## 7. 下一步
+## 7. 未來測試案例方向
+
+如果未來 `fallback_text` 接入 runtime，測試應確認：
+
+- 設定後的 `fallback_text` 會影響 fallback 路徑中的 `processed_text`
+- fallback 後的 `is_valid` 仍應為 `False`
+- 空輸入仍應保留 `EMPTY_INPUT`
+- 非字串輸入仍應保留 `UNEXPECTED_TYPE`
+- 空輸入仍應保留 `fallback_if_empty` event
+- 非字串輸入仍應保留 `type_guard` event
+
+測試不應過早固定：
+
+- 完整錯誤訊息文字
+- `events` 的完整順序
+- `events` 的固定數量
+- `errors` 的固定數量
+
+原因是：`fallback_text` 只應改變 fallback 輸出文字，不應改變錯誤身份、event name、early return 行為，或 observability 的未來擴充空間。
+
+## 8. 下一步
 
 下一步不應直接改 runtime。
 
