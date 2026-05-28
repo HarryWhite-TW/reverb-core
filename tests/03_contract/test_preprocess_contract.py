@@ -83,4 +83,99 @@ def test_valid_input_returns_stable_contract():
     assert result.is_valid is True
     assert result.errors == []
     assert any(ev.name == "symbol_cleaner" for ev in result.events)
+
+
+def test_valid_input_freezes_exact_observable_contract():
+    text = " What!!?? "
+
+    result = preprocess_input(text)
+
+    assert isinstance(result, ProcessingResult)
+    assert re.fullmatch(r"[0-9a-f]{32}", result.correlation_id) is not None
+    assert result.original_input == text
+    assert result.processed_text == "What！？"
+    assert result.is_valid is True
+    assert result.errors == []
+    assert [ev.name for ev in result.events] == [
+        "strip_spaces",
+        "trim_edges",
+        "collapse_spaces",
+        "symbol_cleaner",
+    ]
+    assert [ev.severity for ev in result.events] == [
+        "info",
+        "info",
+        "info",
+        "info",
+    ]
+    assert [ev.changed for ev in result.events] == [
+        True,
+        False,
+        False,
+        True,
+    ]
+
+
+def test_blank_input_freezes_exact_fallback_contract():
+    text = "   "
+
+    result = preprocess_input(text)
+
+    assert isinstance(result, ProcessingResult)
+    assert re.fullmatch(r"[0-9a-f]{32}", result.correlation_id) is not None
+    assert result.original_input == text
+    assert result.processed_text == "…"
+    assert result.is_valid is False
+    assert len(result.errors) == 1
+
+    err = result.errors[0]
+    assert err.code == "EMPTY_INPUT"
+    assert err.step == "fallback_if_empty"
+    assert err.severity == "warn"
+
+    assert [ev.name for ev in result.events] == [
+        "strip_spaces",
+        "trim_edges",
+        "collapse_spaces",
+        "fallback_if_empty",
+    ]
+    assert "symbol_cleaner" not in [ev.name for ev in result.events]
+    assert [ev.severity for ev in result.events] == [
+        "info",
+        "info",
+        "info",
+        "warn",
+    ]
+    assert [ev.changed for ev in result.events] == [
+        True,
+        False,
+        False,
+        True,
+    ]
+
+
+def test_non_string_input_freezes_exact_type_guard_contract():
+    raw_input = 123
+
+    result = preprocess_input(raw_input)
+
+    assert isinstance(result, ProcessingResult)
+    assert re.fullmatch(r"[0-9a-f]{32}", result.correlation_id) is not None
+    assert result.original_input == raw_input
+    assert result.processed_text == "…"
+    assert result.is_valid is False
+    assert len(result.errors) == 1
+
+    err = result.errors[0]
+    assert err.code == "UNEXPECTED_TYPE"
+    assert err.step == "type_guard"
+    assert err.severity == "warn"
+
+    assert [ev.name for ev in result.events] == ["type_guard"]
+    assert [ev.severity for ev in result.events] == ["warn"]
+    assert [ev.changed for ev in result.events] == [True]
+    assert "strip_spaces" not in [ev.name for ev in result.events]
+    assert "trim_edges" not in [ev.name for ev in result.events]
+    assert "collapse_spaces" not in [ev.name for ev in result.events]
+    assert "symbol_cleaner" not in [ev.name for ev in result.events]
     
