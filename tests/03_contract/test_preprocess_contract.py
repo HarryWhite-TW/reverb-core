@@ -1,5 +1,6 @@
 #FILE:test_preprocess_contract.py
 import re
+import pytest
 from elysia_core.input.preprocess import preprocess_input
 from elysia_core.contracts import ProcessingResult
 
@@ -178,4 +179,39 @@ def test_non_string_input_freezes_exact_type_guard_contract():
     assert "trim_edges" not in [ev.name for ev in result.events]
     assert "collapse_spaces" not in [ev.name for ev in result.events]
     assert "symbol_cleaner" not in [ev.name for ev in result.events]
+
+
+@pytest.mark.parametrize(
+    "raw_input",
+    [
+        None,
+        [1, 2, 3],
+        {"x": 1},
+        True,
+    ],
+)
+def test_non_string_inputs_freeze_exact_type_guard_contract(raw_input):
+    result = preprocess_input(raw_input)
+
+    assert isinstance(result, ProcessingResult)
+    assert re.fullmatch(r"[0-9a-f]{32}", result.correlation_id) is not None
+    assert result.original_input == raw_input
+    assert result.processed_text == "…"
+    assert result.is_valid is False
+    assert len(result.errors) == 1
+
+    err = result.errors[0]
+    assert err.code == "UNEXPECTED_TYPE"
+    assert err.step == "type_guard"
+    assert err.severity == "warn"
+
+    event_names = [ev.name for ev in result.events]
+    assert event_names == ["type_guard"]
+    assert [ev.severity for ev in result.events] == ["warn"]
+    assert [ev.changed for ev in result.events] == [True]
+    assert "strip_spaces" not in event_names
+    assert "trim_edges" not in event_names
+    assert "collapse_spaces" not in event_names
+    assert "fallback_if_empty" not in event_names
+    assert "symbol_cleaner" not in event_names
     
