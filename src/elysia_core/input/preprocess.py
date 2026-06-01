@@ -1,4 +1,3 @@
-import re
 import uuid
 from typing import Any
 from elysia_core.contracts import ProcessingResult, StepEvent, ErrorItem
@@ -6,6 +5,7 @@ from elysia_core.input.runner import run_step
 from elysia_core.input.steps.collapse_spaces import collapse_spaces
 from elysia_core.input.steps.fallback import fallback_if_empty
 from elysia_core.input.steps.strip import strip_spaces
+from elysia_core.input.steps.symbol_cleaner import symbol_cleaner
 from elysia_core.input.steps.trim_edges import trim_edges
 
 
@@ -173,35 +173,4 @@ def preprocess_input(text: Any) -> ProcessingResult:
     )
 
 
-
-# ---------------------------------------------------------
-# symbol_cleaner: 壓縮重複符號
-# ---------------------------------------------------------
-def symbol_cleaner(text: str) -> str:
-    # 基礎收斂（句點、波浪等）
-    text = re.sub(r"\.{2,}", "…", text)
-    text = re.sub(r"。{2,}", "…", text)
-    text = re.sub(r"\?{2,}", "？", text)
-    text = re.sub(r"!{2,}", "！", text)
-    text = re.sub(r"~{2,}", "～", text)
-
-    # 混合 !? 區塊收斂
-    def normalize(block: str) -> str:
-        # 抓出不同種類的符號（依出現順序）
-        unique = []
-        for ch in block:
-            if ch not in unique:
-                unique.append(ch)
-        # 替換成全形
-        full = []
-        for ch in unique[:2]:  # 最多取兩種
-            if ch in ['!', '！']:
-                full.append("！")
-            elif ch in ['?', '？']:
-                full.append("？")
-        return "".join(full)
-
-    text = re.sub(r"[!?！？]+", lambda m: normalize(m.group(0)), text)
-
-    return text
 
