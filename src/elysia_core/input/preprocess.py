@@ -3,6 +3,7 @@ import uuid
 from typing import Any
 from elysia_core.contracts import ProcessingResult, StepEvent, ErrorItem
 from elysia_core.input.runner import run_step
+from elysia_core.input.steps.strip import strip_spaces
 
 
 def make_correlation_id() -> str:
@@ -168,13 +169,6 @@ def preprocess_input(text: Any) -> ProcessingResult:
         errors=errors,
     )
 
-
-
-# ---------------------------------------------------------
-# strip_spaces: 輸入字串 → 回傳去除前後空白後的字串，沒有紀錄、沒有事件、沒有錯誤處理。
-# ---------------------------------------------------------
-def strip_spaces(text: str) -> str:
-    return text.strip()
 
 
 # ---------------------------------------------------------
