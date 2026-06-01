@@ -3,7 +3,9 @@ import uuid
 from typing import Any
 from elysia_core.contracts import ProcessingResult, StepEvent, ErrorItem
 from elysia_core.input.runner import run_step
+from elysia_core.input.steps.collapse_spaces import collapse_spaces
 from elysia_core.input.steps.strip import strip_spaces
+from elysia_core.input.steps.trim_edges import trim_edges
 
 
 def make_correlation_id() -> str:
@@ -172,13 +174,6 @@ def preprocess_input(text: Any) -> ProcessingResult:
 
 
 # ---------------------------------------------------------
-# collapse_spaces: 將多個空白壓成「1 個空白」
-# ---------------------------------------------------------
-def collapse_spaces(text: str) -> str:
-    return re.sub(" +", " ", text)
-
-
-# ---------------------------------------------------------
 # symbol_cleaner: 壓縮重複符號
 # ---------------------------------------------------------
 def symbol_cleaner(text: str) -> str:
@@ -217,14 +212,4 @@ def fallback_if_empty(text: str) -> dict:
         return {"text": "…", "reason": "fallback"}
     return {"text": text, "reason": "normal"}
 
-
-# ---------------------------------------------------------
-# trim_edges:去除頭尾標點符號
-# ---------------------------------------------------------
-def trim_edges(text: str) -> str:
-    #註解:只做句首/句尾的非法字元剔除，不碰中間
-    allowed_chars = r"A-Za-z0-9\u4e00-\u9fff\.\,\?\!\？\！\～\…"
-    text = re.sub(rf"^[^{allowed_chars}]+", "", text)
-    text = re.sub(rf"[^{allowed_chars}]+$", "", text)
-    return text
 
