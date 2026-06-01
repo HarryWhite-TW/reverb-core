@@ -2,6 +2,7 @@ import re
 import uuid
 from typing import Any
 from elysia_core.contracts import ProcessingResult, StepEvent, ErrorItem
+from elysia_core.input.runner import run_step
 
 
 def make_correlation_id() -> str:
@@ -167,25 +168,6 @@ def preprocess_input(text: Any) -> ProcessingResult:
         errors=errors,
     )
 
-
-
-# ---------------------------------------------------------
-# run_step: 把「處理行為本身」變成一個可記錄、可回放、可驗證的東西。
-# ---------------------------------------------------------
-def run_step(name: str, func, before: str)-> tuple[str, StepEvent]:  
-     #func像「插槽」，把不同的處理函式「插進去」collapse_spaces、trim_edges、symbol_cleaner
-    after = func(before)
-    changed = before != after  #「事件是否改變輸入，是由資料自己決定的」。
-
-    event = StepEvent(  #把這一步「發生了什麼」封裝成標準格式，交回給 pipeline 去收集。
-        name=name,
-        severity="info",
-        changed=changed,
-        note="",
-        before=before,
-        after=after,
-    )
-    return after, event
 
 
 # ---------------------------------------------------------
