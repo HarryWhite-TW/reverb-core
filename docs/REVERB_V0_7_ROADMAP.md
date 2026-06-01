@@ -1,12 +1,12 @@
 # Reverb Core v0.7 Roadmap
 
-This document defines the next development direction after Reverb Core v0.6.
+This document tracks the v0.7 direction after Reverb Core v0.6 and records the current post-M1/M2/M3-B state.
 
-It is intentionally a planning document. It does not implement architecture changes, does not rename packages, and does not claim production readiness.
+It is intentionally a planning document. It does not rename packages, does not claim production readiness, and does not describe completed SDK or Workbench integration.
 
 ## 1. Current State
 
-Reverb Core v0.6 is a deterministic input guardrail layer.
+Reverb Core v0.7 is a deterministic input guardrail and preprocessing core.
 
 Its purpose is to accept untrusted input, run it through a predictable preprocessing pipeline, and always return a stable structured result. It is not a chatbot, not an application, and not a model inference system.
 
@@ -19,38 +19,43 @@ Current strengths:
 * Invalid inputs return structured fallback results.
 * CLI execution is available.
 * Docker execution is available.
-* Pytest layers exist for unit, integration, contract, and e2e validation.
+* Pytest layers exist for unit, integration, contract, public API, and e2e validation.
+* M1 froze observable behavior with tests.
+* M2 completed thin modularization of runner, steps, and pipeline orchestration.
+* M3-B aligned the README with the current v0.7 state.
 
 Current status:
 
-* v0.6 is demo-ready.
-* v0.6 is suitable for portfolio explanation and engineering demonstration.
-* v0.6 is not yet production-ready.
-* v0.6 is not yet reusable-package-ready.
+* v0.7 is demo-ready as a deterministic guardrail layer.
+* v0.7 is suitable for engineering review, CLI demonstration, and future SDK/package-readiness planning.
+* v0.7 is modular and test-protected.
+* v0.7 is not production-ready.
+* v0.7 is not reusable-package-ready.
+* v0.7 is not a completed SDK.
 
 ## 2. Gap Assessment
 
-Approximate current readiness:
+Approximate current readiness after M1/M2/M3-B:
 
-* Ideal usable: 65%
-* Modularization: 45%
-* Reusable in other products: 40%
+* Demo / engineering usability: high for the current v0.7 scope.
+* Modularization: largely complete for thin modularization.
+* Reuse in other products: structurally prepared, but not package-ready or SDK-complete yet.
 
 ### Ideal usability gap
 
-The project can already demonstrate its core behavior, but it still needs better stabilization, clearer documentation, stronger CI/release discipline, and more explicit usage boundaries before it can be considered broadly usable.
+The project can demonstrate its core behavior and internal boundaries clearly. Remaining v0.7 work should focus on documentation alignment, demo verification, and package-readiness planning without expanding scope.
 
 ### Modularization gap
 
-The current implementation has a stable contract and useful test layers, but the internal responsibilities are still too concentrated. v0.7 should separate pipeline orchestration, step execution, and individual step logic without changing behavior.
+The main v0.7 thin modularization goal is complete. `preprocess.py`, `pipeline.py`, `runner.py`, and `steps/` now have clearer responsibilities. Optional future cleanup may review whether type guard logic should remain in `pipeline.py` or move into a dedicated module, but that is deferred and not required for v0.7 completion.
 
 ### Reuse-in-other-products gap
 
-The project is not yet ready to be consumed as a clean reusable package. It still needs public API stabilization, package metadata, CI, integration examples, and clearer output schema documentation.
+The project is not yet ready to be consumed as a clean reusable package. It still needs package metadata review, public API documentation, CI planning, integration examples, and clearer versioning/release guidance before v0.8 package-readiness work begins.
 
-## 3. v0.7 Goal: Thin Modularization
+## 3. v0.7 Goal: Thin Modularization And Documentation Alignment
 
-The v0.7 goal is thin modularization.
+The v0.7 goal is thin modularization plus alignment of the public docs with the completed internal structure.
 
 This means:
 
@@ -60,25 +65,34 @@ This means:
 * Preserve current CLI behavior unless explicitly approved.
 * Avoid plugin systems, framework-like abstractions, or premature package rename.
 * Make the codebase easier to test, review, and extend.
+* Keep README and roadmap wording aligned with actual implementation.
 
-v0.7 should focus on reorganizing existing responsibilities, not expanding product scope.
+v0.7 focuses on reorganizing existing responsibilities and explaining the result, not expanding product scope.
 
-Target responsibility separation:
+Current responsibility separation:
 
 * `preprocess.py`: public entry point and compatibility surface.
-* `pipeline.py`: deterministic pipeline orchestration.
-* `runner.py`: reusable step execution and `StepEvent` creation.
+* `pipeline.py`: deterministic pipeline orchestration, early returns, `correlation_id` creation, event/error collection, and `ProcessingResult` construction.
+* `runner.py`: reusable step execution and normal info-level `StepEvent` creation.
 * `steps/`: individual deterministic preprocessing steps.
 
-The main design rule for v0.7:
+The main design rule for v0.7 remains:
 
-> Same input should produce the same observable result before and after modularization.
+> Same input follows the same deterministic processing path and produces the same normalized output, errors, and event sequence, while `correlation_id` is generated per call.
 
-## 4. v0.8 Goal: Reusable Package Readiness
+## 4. Longer-Term Direction
+
+Reverb may evolve toward an embeddable guardrail SDK/package for AI applications, agents, local workbenches, or backend workflows.
+
+Future directions may include validating structured AI task packets before they enter AI-assisted or agent workflows. Potential task validation areas include task schema, allowed actions, forbidden operations, risk level, approval requirements, `correlation_id` linkage, and audit traceability.
+
+Personal Local AI Workbench may become a future consumer or control-plane use case for Reverb. It is not part of Reverb v0.7, and no Workbench integration is complete in the current project.
+
+## 5. v0.8 Goal: Reusable Package Readiness
 
 The v0.8 goal is reusable package readiness.
 
-This phase should only start after v0.7 has stabilized internal module boundaries.
+This phase should only start after v0.7 documentation and demo readiness are stable.
 
 Expected v0.8 planning areas:
 
@@ -87,13 +101,13 @@ Expected v0.8 planning areas:
 * GitHub Actions CI.
 * Package usage documentation.
 * Integration examples.
-* Improved CLI JSON schema.
+* Improved CLI JSON schema documentation.
 * Versioning and release notes.
 * Clear install instructions.
 
 v0.8 may prepare Reverb Core for external package-style consumption, but production readiness must still be validated separately.
 
-## 5. Non-goals
+## 6. Non-goals
 
 The following are explicitly out of scope for v0.7:
 
@@ -101,20 +115,22 @@ The following are explicitly out of scope for v0.7:
 * No LLM prompt orchestration.
 * No multi-agent orchestration.
 * No OpenClaw integration.
-* No Local AI Workbench integration yet.
+* No completed Local AI Workbench integration.
 * No package rename.
 * No production-ready claim.
+* No completed SDK claim.
+* No package-ready claim.
 * No plugin system.
 * No large framework abstraction.
 * No broad product expansion.
 
 The current package path `elysia_core` must remain unchanged during v0.7.
 
-Any future rename to `reverb_core` must be handled as a separate approved migration.
+Any future rename to `reverb_core` must be handled as a separate approved migration and is not proposed for v0.7.
 
-## 6. Target Structure
+## 7. Current Module Structure
 
-Proposed future directory structure, not yet implemented:
+Implemented v0.7 structure:
 
 ```text
 reverb-core/
@@ -130,7 +146,6 @@ reverb-core/
         runner.py
         steps/
           __init__.py
-          type_guard.py
           strip.py
           trim_edges.py
           collapse_spaces.py
@@ -143,25 +158,26 @@ reverb-core/
     04_e2e/
   docs/
     REVERB_V0_7_ROADMAP.md
+    REVERB_V0_7_M1_TEST_FREEZE_SUMMARY.md
+    REVERB_V0_7_M2_THIN_MODULARIZATION_SUMMARY.md
 ```
 
-The exact file names may still be reviewed during implementation, but v0.7 should preserve the current package path `elysia_core`.
+`type_guard` currently remains inside `pipeline.py` because it is orchestration-level early-return behavior. Extracting it into a dedicated `type_guard.py` step module is deferred and optional.
 
-A rename from `elysia_core` to `reverb_core` is not part of v0.7. If needed, it must be handled as a separate approved migration after modularization is stable.
+## 8. Verification Strategy
 
-## 7. Verification Strategy
+M1 froze behavior before modularization. M2 and M3-B preserved that behavior while improving structure and docs.
 
-Before modularization, existing behavior should be frozen through tests.
-
-Required verification commands:
+Core validation commands:
 
 ```powershell
-pytest -q
+python -m pytest -q --basetemp=.\.pytest_tmp -p no:cacheprovider
+$env:PYTHONPATH = "src"
 python -m elysia_core.cli --json "What!!??"
 python -m elysia_core.cli --json "   "
 ```
 
-Docker verification should remain part of the final validation path:
+Docker verification remains useful for final demo refresh:
 
 ```powershell
 docker build -t reverb .
@@ -183,7 +199,7 @@ Behavior that must remain stable:
 * `symbol_cleaner` representative normalization cases.
 * CLI JSON output for representative cases.
 
-## 8. AI-assisted Workflow Rules
+## 9. AI-assisted Workflow Rules
 
 Codex may assist with:
 
@@ -191,6 +207,7 @@ Codex may assist with:
 * Test scaffolds.
 * Repeated refactors.
 * README drafts.
+* Roadmap alignment.
 * Mechanical import updates.
 * Candidate diffs.
 
@@ -221,79 +238,62 @@ https://github.com/HarryWhite-TW/reverb-core.git
 
 The local folder name may differ between environments. Repository identity should be verified primarily by Git remote URL, not by local folder name.
 
-## 9. Milestone Plan
+## 10. Milestone Plan
 
 ### M0: Add roadmap document
 
-Goal:
+Status: Complete.
 
-* Add this roadmap as a docs-only planning artifact.
-
-Expected result:
+Result:
 
 * `docs/REVERB_V0_7_ROADMAP.md` exists.
-* No source code changes.
-* No test changes.
-* No package changes.
+* No source code changes were introduced by M0.
 
 ### M1: Freeze current behavior with tests
 
-Goal:
+Status: Complete.
 
-* Strengthen tests before refactoring.
-
-Expected result:
+Result:
 
 * Current behavior is protected before modularization.
-* Contract, fallback, type guard, symbol normalization, and CLI JSON behavior are covered.
+* Contract, fallback, type guard, symbol normalization, public API surface, and CLI JSON behavior are covered.
+* Summary: `docs/REVERB_V0_7_M1_TEST_FREEZE_SUMMARY.md`.
 
-### M2: Extract runner and steps
+### M2: Thin modularization
 
-Goal:
+Status: Complete.
 
-* Move `run_step()` and individual step functions into clearer modules.
+Result:
 
-Expected result:
+* `runner.py` owns `run_step`.
+* Individual deterministic steps live under `steps/`.
+* `pipeline.py` owns deterministic preprocessing orchestration.
+* `preprocess_input()` remains the stable public entry point.
+* Existing tests continued passing after each extraction.
+* Summary: `docs/REVERB_V0_7_M2_THIN_MODULARIZATION_SUMMARY.md`.
 
-* Step execution logic is separated.
-* Individual preprocessing steps are easier to review and test.
-* Public behavior remains unchanged.
+### M3: Documentation alignment and demo readiness
 
-### M3: Extract pipeline orchestration
+Status: In progress.
 
-Goal:
+Completed:
 
-* Separate deterministic pipeline orchestration from the public entry point.
+* README aligned with v0.7 current state and modular architecture.
 
-Expected result:
+In progress:
 
-* `preprocess_input()` remains the stable entry point.
-* Pipeline flow becomes easier to understand.
-* Existing tests continue passing.
+* Roadmap alignment with completed M1/M2/M3-B state.
 
-### M4: Update CLI imports if needed
+Remaining possible M3 work:
 
-Goal:
+* Demo verification refresh.
+* Docker verification refresh.
+* Package-readiness checklist planning.
+* Final v0.7 closeout summary if useful.
 
-* Keep CLI behavior stable after internal module changes.
+### M4: Package-readiness planning
 
-Expected result:
-
-* `python -m elysia_core.cli --json "What!!??"` still works.
-* CLI JSON behavior remains representative and testable.
-
-### M5: Update documentation
-
-Goal:
-
-* Update README and docs only after verified behavior changes.
-
-Expected result:
-
-* Documentation matches actual behavior.
-* No unverified claims are introduced.
-
-### M6: Prepare package-readiness checklist
+Status: Future planning.
 
 Goal:
 
@@ -301,20 +301,21 @@ Goal:
 
 Expected result:
 
-* Public API, package metadata, CI, and integration-example needs are listed for v0.8.
+* Public API, package metadata, CI, versioning, and integration-example needs are listed for v0.8.
 
-## 10. Definition of Done
+## 11. Definition of Done For Current Roadmap Alignment
 
-This roadmap task is complete when:
+This roadmap alignment task is complete when:
 
-* `docs/REVERB_V0_7_ROADMAP.md` exists.
-* Only the roadmap document is changed.
+* `docs/REVERB_V0_7_ROADMAP.md` reflects completed M1 and M2 work.
+* README v0.7 alignment is reflected as completed.
+* Current module responsibilities match the implemented code.
+* `type_guard` is documented as currently inside `pipeline.py`.
+* Future direction is preserved without overclaiming.
 * No source code is changed.
 * No tests are changed.
 * No README, Dockerfile, setup.py, pyproject.toml, or CI files are changed.
-* The document clearly separates v0.7 and v0.8.
 * The document preserves `elysia_core` as the v0.7 package path.
-* The document does not imply package rename during v0.7.
-* The document does not introduce OpenClaw integration.
-* The document does not introduce Local AI Workbench integration.
+* The document does not propose package rename during v0.7.
 * The document does not claim production readiness.
+* The document does not claim completed SDK or Workbench integration.
