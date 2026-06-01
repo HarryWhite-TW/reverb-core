@@ -4,6 +4,7 @@ from typing import Any
 from elysia_core.contracts import ProcessingResult, StepEvent, ErrorItem
 from elysia_core.input.runner import run_step
 from elysia_core.input.steps.collapse_spaces import collapse_spaces
+from elysia_core.input.steps.fallback import fallback_if_empty
 from elysia_core.input.steps.strip import strip_spaces
 from elysia_core.input.steps.trim_edges import trim_edges
 
@@ -203,13 +204,4 @@ def symbol_cleaner(text: str) -> str:
     text = re.sub(r"[!?！？]+", lambda m: normalize(m.group(0)), text)
 
     return text
-
-# ---------------------------------------------------------
-# fallback_if_empty: 處理 None 或空字串
-# ---------------------------------------------------------
-def fallback_if_empty(text: str) -> dict:
-    if str(text).strip() == "":
-        return {"text": "…", "reason": "fallback"}
-    return {"text": text, "reason": "normal"}
-
 
