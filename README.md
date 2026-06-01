@@ -1,29 +1,43 @@
-````md
-# Reverb Core — Deterministic Input Guardrail Layer (v0.6)
+# Reverb Core - Deterministic Input Guardrail Layer (v0.7)
 
 > A contract-first, deterministic input preprocessing layer designed to make system behavior observable, traceable, and safe.
 
----
-
 ## Overview
 
-**Reverb Core** is a backend-oriented engineering project focused on building a deterministic and contract-first input preprocessing pipeline.
+**Reverb Core** is a backend-oriented engineering project focused on deterministic, contract-first input preprocessing.
 
-`Reverb` / `Reverb Core` is the public project name, while `elysia_core` is the current Python package and module path.
+`Reverb` / `Reverb Core` is the public project name. `elysia_core` remains the current Python package and module path.
 
-It is not an application.
-
-It is a foundational guardrail component designed to sit before APIs, NLP systems, or backend services to ensure:
+It is not an application and does not perform model inference. It is a foundational guardrail component designed to sit before APIs, NLP systems, or backend services to ensure:
 
 - All inputs return a structured `ProcessingResult`
-- Every processing step emits a traceable `StepEvent`
+- Every normal processing step emits a traceable `StepEvent`
 - Errors are explicit and machine-readable
-- No uncaught exceptions escape the system
-- The pipeline execution order is deterministic
+- Invalid inputs use structured early returns
+- Pipeline execution order is deterministic
 
----
+## Current Status
 
-## Core Guarantees (v0.6)
+Reverb v0.7 has completed two stabilization milestones:
+
+- **M1: Behavior freeze with tests**
+  Current observable behavior was frozen with unit, integration, contract, public API, and CLI/e2e tests.
+- **M2: Thin modularization**
+  The previous preprocessing implementation was split into runner, pipeline, and individual step modules while preserving behavior.
+
+This project is demo-ready as a deterministic input guardrail layer. It does not claim production readiness, reusable package readiness, or a package rename.
+
+## Future Direction
+
+Reverb is intended to evolve toward an embeddable guardrail SDK/package for AI applications, agents, local workbenches, and backend workflows. Beyond raw text preprocessing, the longer-term direction includes validating structured AI task packets before they enter AI-assisted or agent workflows, including task schema, allowed actions, forbidden operations, risk level, approval requirements, `correlation_id` linkage, and audit traceability. Personal Local AI Workbench may become a future consumer or control-plane use case, but it is not part of Reverb v0.7; v0.7 is currently a modular, test-protected preprocessing core, not a finished SDK, completed Workbench integration, or production-ready system.
+
+Planning notes:
+
+- [Reverb v0.7 roadmap](docs/REVERB_V0_7_ROADMAP.md)
+- [M1 test freeze summary](docs/REVERB_V0_7_M1_TEST_FREEZE_SUMMARY.md)
+- [M2 thin modularization summary](docs/REVERB_V0_7_M2_THIN_MODULARIZATION_SUMMARY.md)
+
+## Core Guarantees
 
 Reverb enforces the following invariants:
 
@@ -33,9 +47,7 @@ Reverb enforces the following invariants:
 - Explicit error modeling
 - Step-level observability
 
-Same input → Same output.
-
----
+Same input follows the same deterministic processing path and produces the same normalized output, errors, and event sequence, while correlation_id is generated per call.
 
 ## Deterministic Pipeline
 
@@ -51,50 +63,46 @@ Execution order:
 
 ```text
 Input
-↓
+|
 strip_spaces
-↓
+|
 trim_edges
-↓
+|
 collapse_spaces
-↓
-fallback_if_empty ──┐ (early return if triggered)
-↓                  │
-symbol_cleaner     │
-↓                  │
-ProcessingResult ◀─┘
-````
-
----
+|
+fallback_if_empty -- early return if triggered
+|
+symbol_cleaner
+|
+ProcessingResult
+```
 
 ## Quick Start
 
 The CLI is currently invoked through the `elysia_core` module path.
 
-### Run locally
+### Run Locally
 
 ```bash
 python -m elysia_core.cli "Hello   world!!"
 ```
 
-### Run in JSON mode
+### Run In JSON Mode
 
 ```bash
 python -m elysia_core.cli --json "Hello   world!!"
 ```
 
-### Run with Docker
+### Run With Docker
 
 ```bash
 docker build -t reverb .
 docker run --rm reverb --json "Hello   world!!"
 ```
 
----
-
 ## Representative CLI Demo Cases
 
-### Valid processing with whitespace collapse + symbol normalization
+### Valid Processing With Whitespace Collapse And Symbol Normalization
 
 ```bash
 python -m elysia_core.cli "Hello   world!!"
@@ -102,11 +110,11 @@ python -m elysia_core.cli "Hello   world!!"
 
 Expected behavior:
 
-* `collapse_spaces` changes internal spacing
-* `symbol_cleaner` normalizes repeated punctuation
-* output remains valid
+- `collapse_spaces` changes internal spacing
+- `symbol_cleaner` normalizes repeated punctuation
+- output remains valid
 
-### Mixed punctuation normalization in JSON mode
+### Mixed Punctuation Normalization In JSON Mode
 
 ```bash
 python -m elysia_core.cli --json "What!!??"
@@ -114,11 +122,11 @@ python -m elysia_core.cli --json "What!!??"
 
 Expected behavior:
 
-* `symbol_cleaner` normalizes mixed punctuation
-* output becomes `What！？`
-* result remains valid with no errors
+- `symbol_cleaner` normalizes mixed punctuation
+- output becomes `What！？`
+- result remains valid with no errors
 
-### Empty / whitespace-only fallback in JSON mode
+### Empty / Whitespace-Only Fallback In JSON Mode
 
 ```bash
 python -m elysia_core.cli --json "   "
@@ -126,11 +134,10 @@ python -m elysia_core.cli --json "   "
 
 Expected behavior:
 
-* `fallback_if_empty` is triggered
-* output becomes `…`
-* result is invalid with warning-level fallback behavior
-
----
+- `fallback_if_empty` is triggered
+- output becomes `…`
+- result is invalid with warning-level fallback behavior
+- `symbol_cleaner` does not run after fallback
 
 ## Example Output (JSON)
 
@@ -152,7 +159,7 @@ Expected behavior:
     },
     {
       "name": "collapse_spaces",
-      "changed": false,
+      "changed": true,
       "severity": "info"
     },
     {
@@ -165,14 +172,12 @@ Expected behavior:
 }
 ```
 
----
-
 ## Edge Cases
 
-| Case | Input                    | Processed_text | is_valid | Errors            | Notes                             |
+| Case | Input                    | Processed text | is_valid | Errors            | Notes                             |
 | ---- | ------------------------ | -------------- | -------- | ----------------- | --------------------------------- |
 | 01   | `""`                     | `…`            | False    | `EMPTY_INPUT`     | Empty string triggers fallback    |
-| 02   | `None`                   | `…`            | False    | `UNEXPECTED_TYPE` | Intercepted by type_guard         |
+| 02   | `None`                   | `…`            | False    | `UNEXPECTED_TYPE` | Intercepted by type guard         |
 | 03   | `"   "`                  | `…`            | False    | `EMPTY_INPUT`     | Whitespace-only triggers fallback |
 | 04   | `"Hello world"`          | `Hello world`  | True     | None              | No modification                   |
 | 05   | `" Hello world "`        | `Hello world`  | True     | None              | Strip applied                     |
@@ -181,28 +186,56 @@ Expected behavior:
 | 08   | `"What!!??"`             | `What！？`       | True     | None              | Mixed punctuation normalized      |
 | 09   | `123`                    | `…`            | False    | `UNEXPECTED_TYPE` | Non-string input handled safely   |
 
----
-
 ## Architecture
+
+### Public Entry Point
+
+`src/elysia_core/input/preprocess.py` provides the stable public entry point:
+
+```python
+from elysia_core.input.preprocess import preprocess_input
+```
+
+It also keeps compatibility imports for the individual step functions used by existing tests and examples.
+
+### Pipeline
+
+`src/elysia_core/input/pipeline.py` owns deterministic orchestration:
+
+- `correlation_id` creation
+- event and error collection
+- type guard early return
+- fallback early return
+- `ProcessingResult` construction
+- step execution order
+
+### Runner
+
+`src/elysia_core/input/runner.py` owns `run_step`, which:
+
+- Executes a deterministic step function
+- Detects whether the step changed the text
+- Creates normal info-level `StepEvent` records
+
+### Steps
+
+`src/elysia_core/input/steps/` contains deterministic individual preprocessing steps:
+
+- `strip.py`
+- `trim_edges.py`
+- `collapse_spaces.py`
+- `fallback.py`
+- `symbol_cleaner.py`
 
 ### Contracts
 
-* `ProcessingResult`
-* `StepEvent`
-* `ErrorItem`
+Contract types are defined in `src/elysia_core/contracts.py`:
 
-All outputs conform strictly to the defined contract schema.
-Contract types are currently defined in `src/elysia_core/contracts.py`.
+- `ProcessingResult`
+- `StepEvent`
+- `ErrorItem`
 
-### Step Runner
-
-Each processing function is wrapped by `run_step`, which:
-
-* Executes transformation
-* Detects state changes
-* Emits structured `StepEvent`
-
----
+All public preprocessing results conform to this contract shape.
 
 ## Testing
 
@@ -212,53 +245,29 @@ pytest -q
 
 Testing focuses on:
 
-* Contract shape validation
-* Early return behavior
-* Deterministic step ordering
-* Edge case regression safety
+- Contract shape validation
+- Early return behavior
+- Deterministic step ordering
+- Edge case regression safety
+- CLI JSON parseability
+- Public API surface stability
 
 Current test layers:
 
-* `01_unit`
-* `02_integration`
-* `03_contract`
-* `04_e2e`
+- `01_unit`
+- `02_integration`
+- `03_contract`
+- `04_e2e`
 
----
+## Regression / Boundary Notes
 
-### Public API Surface Coverage
+A permanent regression test protects early-return behavior: when `fallback_if_empty` is triggered, the pipeline must stop before `symbol_cleaner`.
 
-The public API surface of `preprocess_input()` is protected with representative contract-level tests for:
+CLI boundary note: `python -m elysia_core.cli --json 123` does not test non-string handling because CLI argv input is passed as a string. Non-string `type_guard` behavior is validated at the `preprocess_input()` / pytest level.
 
-* valid input
-* empty / fallback input
-* non-string input
+## Docker Verification
 
-These tests freeze the minimum stable surface of `ProcessingResult` and verify that:
-
-* the result always returns a stable contract
-* core fields remain present and type-stable
-* representative `events` / `errors` remain observable across major input categories
-
----
-
-### Regression / Boundary Notes
-
-A permanent regression test was added for early-return behavior:
-when `fallback_if_empty` is triggered, the pipeline must stop before `symbol_cleaner`.
-
-CLI boundary was also confirmed:
-`python -m elysia_core.cli --json 123` does not test non-string handling,
-because CLI argv input is passed as string. Non-string `type_guard` behavior
-must be validated at the `preprocess_input()` / pytest level instead.
-
----
-
-### Docker Verification
-
-The Docker image was verified against local CLI behavior using representative JSON cases.
-
-Validated commands:
+The Docker image can be verified against representative JSON cases:
 
 ```bash
 docker build --no-cache -t reverb .
@@ -266,49 +275,63 @@ docker run --rm reverb --json "What!!??"
 docker run --rm reverb --json "   "
 ```
 
-Verified behavior:
+Expected behavior:
 
-Docker image builds successfully from the project root
-Docker output matches local CLI behavior for symbol normalization
-Docker output matches local CLI behavior for empty-input fallback
-The container demo is reproducible for representative valid and invalid cases
+- Docker output matches local CLI behavior for symbol normalization
+- Docker output matches local CLI behavior for empty-input fallback
+- The container demo is reproducible for representative valid and invalid cases
 
----
-
-## Scope (v0.6)
+## Scope
 
 This version focuses strictly on:
 
-* Input preprocessing
-* Deterministic guardrail logic
-* Contract-first architecture
-* Observability & traceability
+- Input preprocessing
+- Deterministic guardrail logic
+- Contract-first architecture
+- Observability and traceability
+- Thin modularization of the preprocessing core
 
 Out of scope:
 
-* Model inference
-* API layer integration
-* Performance optimization
-
----
+- Production-ready claims
+- Package rename
+- Model inference
+- API layer integration
+- OpenClaw integration
+- Local AI Workbench integration
 
 ## Project Structure
 
 ```text
 src/
-  elysia_core/contracts.py
-  elysia_core/cli.py
-  elysia_core/input/preprocess.py
+  elysia_core/
+    contracts.py
+    cli.py
+    input/
+      preprocess.py
+      pipeline.py
+      runner.py
+      steps/
+        __init__.py
+        strip.py
+        trim_edges.py
+        collapse_spaces.py
+        fallback.py
+        symbol_cleaner.py
 tests/
   01_unit/
   02_integration/
   03_contract/
   04_e2e/
+docs/
+  REVERB_V0_7_ROADMAP.md
+  REVERB_V0_7_M1_TEST_FREEZE_SUMMARY.md
+  REVERB_V0_7_M2_THIN_MODULARIZATION_SUMMARY.md
 Dockerfile
 README.md
 ```
 
 ---
 
-**Author:** 駿弘
-**Status:** v0.6 — Deterministic Guardrail Layer (Complete Demo Ready)
+**Author:** 駿弘  
+**Status:** v0.7 - Behavior frozen with tests; thin modularization complete; demo-ready, not production-ready.
