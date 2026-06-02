@@ -1,8 +1,8 @@
-# Reverb API Reference
+# Reverb Python Library API Reference
 
 ## 1. Purpose
 
-This document describes the current public API surface for Reverb.
+This document describes the current Python library API surface for Reverb. It is not HTTP, REST, or web API documentation.
 
 Reverb is currently a deterministic input guardrail / preprocessing core. This is not a completed SDK reference yet.
 

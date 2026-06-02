@@ -18,14 +18,25 @@ It is not an application and does not perform model inference. It is a foundatio
 
 ## Current Status
 
-Reverb v0.7 has completed two stabilization milestones:
+Reverb is currently a modular, test-protected deterministic preprocessing core with a small demo layer and usage documentation.
+
+It is demo-ready as a deterministic input guardrail layer. It does not claim production readiness, SDK completion, package-release readiness, completed Local AI Workbench integration, completed Task Packet Guardrail implementation, or a package rename.
+
+## Demo, API, And Output Documentation
+
+- [Demo Guide](docs/DEMO_GUIDE.md): practical walkthrough for presenting and running Reverb demos.
+- [Basic Usage Example](examples/basic_usage.py): runnable Python example for valid input, fallback input, and type guard behavior.
+- [Python API Reference](docs/API_REFERENCE.md): how to call `preprocess_input()` and understand in-memory objects.
+- [Output Schema](docs/OUTPUT_SCHEMA.md): how to interpret `ProcessingResult` and CLI JSON output.
+
+## Engineering History
+
+Reverb v0.7 completed two stabilization milestones:
 
 - **M1: Behavior freeze with tests**
   Current observable behavior was frozen with unit, integration, contract, public API, and CLI/e2e tests.
 - **M2: Thin modularization**
   The previous preprocessing implementation was split into runner, pipeline, and individual step modules while preserving behavior.
-
-This project is demo-ready as a deterministic input guardrail layer. It does not claim production readiness, reusable package readiness, or a package rename.
 
 ## Future Direction
 
@@ -36,17 +47,6 @@ Planning notes:
 - [Reverb v0.7 roadmap](docs/REVERB_V0_7_ROADMAP.md)
 - [M1 test freeze summary](docs/REVERB_V0_7_M1_TEST_FREEZE_SUMMARY.md)
 - [M2 thin modularization summary](docs/REVERB_V0_7_M2_THIN_MODULARIZATION_SUMMARY.md)
-
-## Demo, API, And Output Documentation
-
-Reverb is currently a modular, test-protected deterministic preprocessing core with a small demo layer and usage documentation.
-
-- [Demo Guide](docs/DEMO_GUIDE.md): how to present Reverb in a short demo.
-- [Basic Usage Example](examples/basic_usage.py): runnable Python example for valid input, fallback input, and type guard behavior.
-- [API Reference](docs/API_REFERENCE.md): how to call `preprocess_input()` and understand in-memory objects.
-- [Output Schema](docs/OUTPUT_SCHEMA.md): how to interpret `ProcessingResult` and CLI JSON output.
-
-These docs do not claim production readiness, SDK completion, package-release readiness, completed Local AI Workbench integration, or completed Task Packet Guardrail implementation. Future SDK and task packet direction remains future work.
 
 ## Core Guarantees
 
@@ -134,7 +134,7 @@ python -m elysia_core.cli --json "What!!??"
 Expected behavior:
 
 - `symbol_cleaner` normalizes mixed punctuation
-- output becomes `What！？`
+- escaped output becomes `What\uFF01\uFF1F`
 - result remains valid with no errors
 
 ### Empty / Whitespace-Only Fallback In JSON Mode
@@ -146,7 +146,7 @@ python -m elysia_core.cli --json "   "
 Expected behavior:
 
 - `fallback_if_empty` is triggered
-- output becomes `…`
+- escaped output becomes `\u2026`
 - result is invalid with warning-level fallback behavior
 - `symbol_cleaner` does not run after fallback
 
@@ -154,7 +154,7 @@ Expected behavior:
 
 ```json
 {
-  "processed_text": "Hello world！",
+  "processed_text": "What\uFF01\uFF1F",
   "is_valid": true,
   "errors": [],
   "events": [
@@ -187,15 +187,15 @@ Expected behavior:
 
 | Case | Input                    | Processed text | is_valid | Errors            | Notes                             |
 | ---- | ------------------------ | -------------- | -------- | ----------------- | --------------------------------- |
-| 01   | `""`                     | `…`            | False    | `EMPTY_INPUT`     | Empty string triggers fallback    |
-| 02   | `None`                   | `…`            | False    | `UNEXPECTED_TYPE` | Intercepted by type guard         |
-| 03   | `"   "`                  | `…`            | False    | `EMPTY_INPUT`     | Whitespace-only triggers fallback |
+| 01   | `""`                     | `\u2026`       | False    | `EMPTY_INPUT`     | Empty string triggers fallback    |
+| 02   | `None`                   | `\u2026`       | False    | `UNEXPECTED_TYPE` | Intercepted by type guard         |
+| 03   | `"   "`                  | `\u2026`       | False    | `EMPTY_INPUT`     | Whitespace-only triggers fallback |
 | 04   | `"Hello world"`          | `Hello world`  | True     | None              | No modification                   |
 | 05   | `" Hello world "`        | `Hello world`  | True     | None              | Strip applied                     |
-| 06   | `"***Hello world!!!***"` | `Hello world！` | True     | None              | Trim + symbol normalization       |
-| 07   | `"Hello... world"`       | `Hello… world` | True     | None              | Ellipsis normalization            |
-| 08   | `"What!!??"`             | `What！？`       | True     | None              | Mixed punctuation normalized      |
-| 09   | `123`                    | `…`            | False    | `UNEXPECTED_TYPE` | Non-string input handled safely   |
+| 06   | `"***Hello world!!!***"` | normalized text | True     | None              | Trim + symbol normalization       |
+| 07   | `"Hello... world"`       | `Hello??world` | True     | None              | Ellipsis normalization            |
+| 08   | `"What!!??"`             | `What\uFF01\uFF1F` | True  | None              | Mixed punctuation normalized      |
+| 09   | `123`                    | `\u2026`       | False    | `UNEXPECTED_TYPE` | Non-string input handled safely   |
 
 ## Architecture
 
@@ -344,5 +344,4 @@ README.md
 
 ---
 
-**Author:** 駿弘  
-**Status:** v0.7 - Behavior frozen with tests; thin modularization complete; demo-ready, not production-ready.
+**Status:** Modular, test-protected deterministic preprocessing core with demo and usage docs; not production-ready or SDK-complete.

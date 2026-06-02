@@ -2,9 +2,9 @@
 
 ## 1. Purpose
 
-This guide helps demonstrate Reverb as a deterministic input guardrail / preprocessing core.
+This guide helps external viewers run and understand Reverb as a deterministic input guardrail / preprocessing core.
 
-Reverb is a core / library-style project, so this guide provides a demo wrapper for humans who need to understand the behavior quickly.
+Reverb is a core / library-style project, so this guide focuses on a small practical demo rather than a full application experience.
 
 ## 2. What Reverb Demonstrates
 
@@ -25,7 +25,15 @@ Reverb is a core / library-style project, so this guide provides a demo wrapper 
 
 The main point is that Reverb returns a structured processing result, not just modified text.
 
-## 4. Run The Python Example
+## 4. What To Observe
+
+- `processed_text`: the normalized or fallback text.
+- `is_valid`: whether the input passed the current guardrail checks.
+- `errors`: machine-readable error codes for invalid cases.
+- `events`: the deterministic preprocessing steps that ran.
+- `correlation_id`: a per-call trace identifier.
+
+## 5. Run The Python Example
 
 PowerShell source-tree usage:
 
@@ -36,7 +44,7 @@ python .\examples\basic_usage.py
 
 After package installation, the example should be adaptable without `PYTHONPATH`.
 
-## 5. Run CLI Demo
+## 6. Run CLI Demo
 
 PowerShell source-tree usage:
 
@@ -48,10 +56,10 @@ python -m elysia_core.cli --json "   "
 
 Expected output descriptions:
 
-- valid processed_text should equal `What\uff01\uff1f`
+- valid processed_text should equal `What\uFF01\uFF1F`
 - fallback processed_text should equal `\u2026`
 
-## 6. How To Explain This To Non-Specialists
+## 7. Plain-Language Summary
 
 Reverb sits before an AI workflow.
 
@@ -59,7 +67,7 @@ It checks and normalizes input before the text or task enters later AI steps.
 
 It returns not only text, but also whether the input is valid, what changed, what errors occurred, and how to trace the processing.
 
-## 7. Current Boundaries
+## 8. Current Boundaries
 
 - Not production-ready
 - Not SDK-complete
@@ -67,10 +75,6 @@ It returns not only text, but also whether the input is valid, what changed, wha
 - Not Local AI Workbench integration
 - Not Task Packet Guardrail implementation yet
 - Current demo focuses on text preprocessing guardrail behavior
-
-## 8. Suggested Presenter Script
-
-"Reverb is a deterministic preprocessing guardrail. I can give it normal text, messy text, empty input, or even the wrong input type, and it always returns the same structured result shape. That result tells us the processed text, whether the input is valid, which errors occurred, which steps ran, and a correlation ID for traceability. This is not the full future SDK yet, but it shows the core guardrail behavior clearly."
 
 ## 9. Next Demo Improvements
 
