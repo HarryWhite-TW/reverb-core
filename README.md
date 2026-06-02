@@ -37,6 +37,17 @@ Planning notes:
 - [M1 test freeze summary](docs/REVERB_V0_7_M1_TEST_FREEZE_SUMMARY.md)
 - [M2 thin modularization summary](docs/REVERB_V0_7_M2_THIN_MODULARIZATION_SUMMARY.md)
 
+## Demo, API, And Output Documentation
+
+Reverb is currently a modular, test-protected deterministic preprocessing core with a small demo layer and usage documentation.
+
+- [Demo Guide](docs/DEMO_GUIDE.md): how to present Reverb in a short demo.
+- [Basic Usage Example](examples/basic_usage.py): runnable Python example for valid input, fallback input, and type guard behavior.
+- [API Reference](docs/API_REFERENCE.md): how to call `preprocess_input()` and understand in-memory objects.
+- [Output Schema](docs/OUTPUT_SCHEMA.md): how to interpret `ProcessingResult` and CLI JSON output.
+
+These docs do not claim production readiness, SDK completion, package-release readiness, completed Local AI Workbench integration, or completed Task Packet Guardrail implementation. Future SDK and task packet direction remains future work.
+
 ## Core Guarantees
 
 Reverb enforces the following invariants:
