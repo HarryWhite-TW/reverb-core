@@ -25,6 +25,7 @@ It is demo-ready as a deterministic input guardrail layer. It does not claim pro
 ## Demo, API, And Output Documentation
 
 - [Demo Guide](docs/DEMO_GUIDE.md): practical walkthrough for presenting and running Reverb demos.
+- [Streamlit Input Inspector Demo](docs/INPUT_INSPECTOR_DEMO.md): optional interactive UI demo for non-technical viewers and live presentations.
 - [Basic Usage Example](examples/basic_usage.py): runnable Python example for valid input, fallback input, and type guard behavior.
 - [Python API Reference](docs/API_REFERENCE.md): how to call `preprocess_input()` and understand in-memory objects.
 - [Output Schema](docs/OUTPUT_SCHEMA.md): how to interpret `ProcessingResult` and CLI JSON output.

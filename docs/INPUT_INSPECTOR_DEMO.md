@@ -94,6 +94,8 @@ $env:PYTHONPATH = "src"
 python -m streamlit run .\examples\input_inspector_streamlit.py
 ```
 
+For the broader public demo flow, see the [Demo Guide](DEMO_GUIDE.md).
+
 ## What To Try
 
 - `What!!??`
