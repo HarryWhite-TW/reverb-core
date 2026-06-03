@@ -131,3 +131,76 @@ jobs:
 
           assert importlib.util.find_spec("streamlit") is None
           PY
+
+  wheel-install-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Build and install wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build --wheel
+          python -m pip install dist/*.whl
+
+      - name: Run wheel install smoke checks
+        run: |
+          mkdir -p "$RUNNER_TEMP/reverb-wheel-install-check"
+          cd "$RUNNER_TEMP/reverb-wheel-install-check"
+          python - <<'PY'
+          import importlib.util
+          import json
+          import subprocess
+          import sys
+
+          from elysia_core.input.preprocess import preprocess_input
+          from elysia_core.contracts import ProcessingResult, StepEvent, ErrorItem
+          from elysia_core.config.config_loader import load_default_config
+
+          result = preprocess_input("What!!??")
+          assert result.processed_text.encode("unicode_escape").decode() == "What\\uff01\\uff1f"
+          assert result.is_valid is True
+          assert [error.code for error in result.errors] == []
+
+          assert ProcessingResult.__name__ == "ProcessingResult"
+          assert StepEvent.__name__ == "StepEvent"
+          assert ErrorItem.__name__ == "ErrorItem"
+
+          def run_case(text):
+              completed = subprocess.run(
+                  [sys.executable, "-m", "elysia_core.cli", "--json", text],
+                  text=True,
+                  capture_output=True,
+                  check=False,
+              )
+              if completed.returncode != 0:
+                  print(completed.stdout)
+                  print(completed.stderr)
+                  raise SystemExit(completed.returncode)
+              return json.loads(completed.stdout)
+
+          valid = run_case("What!!??")
+          assert valid["is_valid"] is True
+          assert valid["errors"] == []
+          assert "processed_text" in valid
+
+          fallback = run_case("   ")
+          assert fallback["is_valid"] is False
+          assert "EMPTY_INPUT" in fallback["errors"]
+          assert "processed_text" in fallback
+
+          config = load_default_config()
+          assert isinstance(config, dict)
+          expected_keys = {"enable_safety", "max_response_length", "persona_name", "tone", "version"}
+          assert expected_keys.issubset(config.keys())
+
+          assert importlib.util.find_spec("streamlit") is None
+          PY
