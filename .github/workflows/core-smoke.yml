@@ -1,0 +1,62 @@
+name: Core Smoke
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pytest-and-cli:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Install package and test dependency
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest
+
+      - name: Run pytest
+        run: python -m pytest -q
+
+      - name: Run CLI smoke checks
+        run: |
+          python - <<'PY'
+          import json
+          import subprocess
+          import sys
+
+          def run_case(text):
+              completed = subprocess.run(
+                  [sys.executable, "-m", "elysia_core.cli", "--json", text],
+                  text=True,
+                  capture_output=True,
+                  check=False,
+              )
+              if completed.returncode != 0:
+                  print(completed.stdout)
+                  print(completed.stderr)
+                  raise SystemExit(completed.returncode)
+              return json.loads(completed.stdout)
+
+          valid = run_case("What!!??")
+          assert valid["is_valid"] is True
+          assert valid["errors"] == []
+          assert "processed_text" in valid
+
+          fallback = run_case("   ")
+          assert fallback["is_valid"] is False
+          assert "EMPTY_INPUT" in fallback["errors"]
+          assert "processed_text" in fallback
+          PY
