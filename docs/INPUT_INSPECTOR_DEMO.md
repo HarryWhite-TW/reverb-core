@@ -36,7 +36,9 @@ The UI has three tabs:
 - Process: a compact read-only table of the steps Reverb executed, followed by optional before / after expanders when there is meaningful step data.
 - Technical Details: full raw contract-style output for engineering review.
 
-The Overview tab answers the public-facing questions first: what input was analyzed, whether it can continue, what Reverb output, whether errors were returned, and what changed in plain language.
+The Overview tab answers the public-facing questions first: what kind of input is being demonstrated, what Reverb decided, what Reverb output, whether errors were returned, and why the result matters.
+
+Each preset includes a short scenario explanation and a What happened summary. These are presentation copy only; they do not change Reverb core behavior.
 
 The Overview tab avoids raw JSON, full event lists, debug-like step details, and full `correlation_id` emphasis. It shows only a short trace ID summary. The full `correlation_id` is available in Technical Details.
 
