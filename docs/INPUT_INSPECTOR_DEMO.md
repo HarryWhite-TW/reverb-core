@@ -32,26 +32,28 @@ The Python `None` object case calls `preprocess_input(None)` directly. It is a n
 
 The UI has three tabs:
 
-- Overview: a non-technical summary of the analyzed input, safe / blocked status, processed text, error codes, plain-language explanation, and trace ID.
-- Process: a read-only view of the steps Reverb executed.
-- Technical Details: raw contract-style output for engineering review.
+- Overview: a non-technical summary for teachers, companies, vendors, GitHub visitors, and other viewers who need the result without reading raw JSON.
+- Process: a compact read-only table of the steps Reverb executed, followed by optional before / after expanders when there is meaningful step data.
+- Technical Details: full raw contract-style output for engineering review.
 
-The Overview tab avoids raw JSON and full event lists so a viewer can understand the demo quickly.
+The Overview tab answers the public-facing questions first: what input was analyzed, whether it can continue, what Reverb output, whether errors were returned, and what changed in plain language.
+
+The Overview tab avoids raw JSON, full event lists, debug-like step details, and full `correlation_id` emphasis. It shows only a short trace ID summary. The full `correlation_id` is available in Technical Details.
 
 ## Process Tab
 
-The Process tab shows a compact Step Inspector. It is read-only because Reverb uses a deterministic fixed pipeline.
+The Process tab shows a compact Step Inspector table first. It is read-only because Reverb uses a deterministic fixed pipeline.
 
 The changed-only filter only changes which executed steps are displayed. It does not disable, enable, reorder, or configure pipeline behavior.
 
-Each step shows:
+The table shows:
 
 - raw step name
 - human-readable description
 - severity from Reverb core
 - changed state
 
-Before / after details appear only when Reverb provides before or after data, and they are hidden inside per-step expanders.
+Before / after details are hidden by default inside per-step expanders. Expanders appear only for steps with meaningful before / after data. Human-readable values are shown first, and escaped values appear only when they add useful visibility.
 
 ## Technical Details Tab
 
@@ -66,6 +68,8 @@ The Technical Details tab shows:
 - raw JSON-like summary
 
 Raw technical keys stay in English.
+
+This tab is intentionally separate from Overview so engineering reviewers can inspect the complete raw contract-style shape without making the first screen feel like a debug page.
 
 ## Language Modes
 

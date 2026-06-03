@@ -35,7 +35,8 @@ TEXT = {
         "blocked": "\u5df2\u963b\u64cb",
         "processed_text": "\u8655\u7406\u5f8c\u6587\u5b57",
         "error_codes": "Error codes",
-        "trace_id": "\u8ffd\u8e64 ID",
+        "trace_summary": "\u8ffd\u8e64 ID \u6458\u8981",
+        "full_correlation_id": "\u5b8c\u6574\u8ffd\u8e64 ID",
         "valid_explanation": "Reverb \u5df2\u6b63\u898f\u5316\u8f38\u5165\uff0c\u53ef\u4ee5\u7e7c\u7e8c\u9032\u5165\u4e0b\u4e00\u500b\u5de5\u4f5c\u6b65\u9a5f\u3002",
         "blocked_explanation": "Reverb \u5075\u6e2c\u5230\u4e0d\u53ef\u7528\u7684\u8f38\u5165\uff0c\u4e26\u56de\u50b3\u5b89\u5168 fallback \u8207\u932f\u8aa4\u8cc7\u8a0a\u3002",
         "changed_explanation": "\u90e8\u5206\u5167\u5bb9\u5df2\u88ab\u6e05\u7406\u6216\u6b63\u898f\u5316\u3002",
@@ -43,9 +44,14 @@ TEXT = {
         "step_inspector": "Step Inspector",
         "step_helper": "\u9019\u88e1\u986f\u793a Reverb \u5be6\u969b\u57f7\u884c\u7684\u6b65\u9a5f\u3002\u5b83\u4e0d\u662f\u53ef\u8a2d\u5b9a\u7684 pipeline \u958b\u95dc\u3002",
         "changed_only": "\u53ea\u986f\u793a\u6703\u6539\u8b8a\u8f38\u5165\u7684\u6b65\u9a5f",
+        "changed_only_note": "\u9019\u53ea\u6703\u904e\u6ffe\u756b\u9762\u986f\u793a\uff0c\u4e0d\u6703\u6539\u8b8a Reverb \u7684\u56fa\u5b9a pipeline\u3002",
+        "step_name": "\u6b65\u9a5f",
+        "description_label": "\u8aaa\u660e",
+        "severity_label": "\u7b49\u7d1a",
+        "change_state": "\u662f\u5426\u6539\u8b8a",
         "changed": "changed",
         "unchanged": "unchanged",
-        "before_after": "\u67e5\u770b\u8655\u7406\u524d / \u8655\u7406\u5f8c",
+        "before_after": "\u8655\u7406\u524d / \u8655\u7406\u5f8c",
         "before": "\u8655\u7406\u524d",
         "after": "\u8655\u7406\u5f8c",
         "before_escape": "before_escape",
@@ -79,7 +85,8 @@ TEXT = {
         "blocked": "Blocked",
         "processed_text": "Processed text",
         "error_codes": "Error codes",
-        "trace_id": "Trace ID",
+        "trace_summary": "Trace ID summary",
+        "full_correlation_id": "Full correlation ID",
         "valid_explanation": "Reverb normalized the input and it can continue to the next workflow step.",
         "blocked_explanation": "Reverb detected an unusable input and returned a safe fallback with error information.",
         "changed_explanation": "Some content was cleaned or normalized.",
@@ -87,9 +94,14 @@ TEXT = {
         "step_inspector": "Step Inspector",
         "step_helper": "This shows the steps Reverb executed. It is not a configurable pipeline switch.",
         "changed_only": "Show only steps that changed the input",
+        "changed_only_note": "This only filters the display. It does not change Reverb's fixed pipeline.",
+        "step_name": "Step name",
+        "description_label": "Description",
+        "severity_label": "Severity",
+        "change_state": "Changed / unchanged",
         "changed": "changed",
         "unchanged": "unchanged",
-        "before_after": "View before / after",
+        "before_after": "Before / after",
         "before": "Before",
         "after": "After",
         "before_escape": "before_escape",
@@ -219,26 +231,40 @@ def display_value(value):
     return repr(value) if not isinstance(value, str) else value
 
 
+def compact_trace_id(correlation_id):
+    return f"{correlation_id[:10]}..." if len(correlation_id) > 10 else correlation_id
+
+
+def has_display_value(value):
+    return value is not None and display_value(value) != ""
+
+
+def has_meaningful_before_after(event):
+    return event.changed and (has_display_value(event.before) or has_display_value(event.after))
+
+
 def render_before_after(event, t):
-    if event.before is None and event.after is None:
+    if not has_meaningful_before_after(event):
         return
 
-    with st.expander(t["before_after"]):
+    with st.expander(f"{event.name}: {t['before_after']}"):
         before_col, after_col = st.columns(2)
         with before_col:
-            st.caption(t["before"])
-            st.code("" if event.before is None else display_value(event.before))
-            before_escape = escape_text(event.before)
-            if event.before is not None and before_escape != str(event.before):
-                st.caption(t["before_escape"])
-                st.code(before_escape)
+            if has_display_value(event.before):
+                st.caption(t["before"])
+                st.code(display_value(event.before))
+                before_escape = escape_text(event.before)
+                if before_escape != str(event.before):
+                    st.caption(t["before_escape"])
+                    st.code(before_escape)
         with after_col:
-            st.caption(t["after"])
-            st.code("" if event.after is None else display_value(event.after))
-            after_escape = escape_text(event.after)
-            if event.after is not None and after_escape != str(event.after):
-                st.caption(t["after_escape"])
-                st.code(after_escape)
+            if has_display_value(event.after):
+                st.caption(t["after"])
+                st.code(display_value(event.after))
+                after_escape = escape_text(event.after)
+                if after_escape != str(event.after):
+                    st.caption(t["after_escape"])
+                    st.code(after_escape)
 
 
 if "preset_key" not in st.session_state:
@@ -314,17 +340,19 @@ with overview_tab:
         else:
             st.error(t["blocked"])
 
-        first_col, second_col = st.columns(2)
+        first_col, second_col, third_col = st.columns(3)
         with first_col:
-            st.metric(t["analyzed_input"], repr(result.original_input))
+            with st.container(border=True):
+                st.caption(t["analyzed_input"])
+                st.code(display_value(result.original_input))
         with second_col:
-            st.metric(
-                t["error_codes"],
-                ", ".join(error_codes) if error_codes else "None",
-            )
-
-        st.caption(t["processed_text"])
-        st.code(result.processed_text)
+            with st.container(border=True):
+                st.caption(t["processed_text"])
+                st.code(result.processed_text)
+        with third_col:
+            with st.container(border=True):
+                st.caption(t["error_codes"])
+                st.code(", ".join(error_codes) if error_codes else "None")
 
         explanation = t["valid_explanation"] if result.is_valid else t["blocked_explanation"]
         change_explanation = (
@@ -334,7 +362,8 @@ with overview_tab:
         )
         st.info(f"{explanation}\n\n{change_explanation}")
 
-        st.metric(t["trace_id"], summary["correlation_id"])
+        st.caption(t["trace_summary"])
+        st.code(compact_trace_id(summary["correlation_id"]))
 
 with process_tab:
     if result is None:
@@ -343,24 +372,23 @@ with process_tab:
         st.write(f"### {t['step_inspector']}")
         st.caption(t["step_helper"])
         changed_only = st.checkbox(t["changed_only"])
+        st.caption(t["changed_only_note"])
         visible_events = [
             event for event in result.events if event.changed or not changed_only
         ]
 
         rows = [
             {
-                "name": event.name,
-                "description": STEP_DESCRIPTIONS[lang].get(event.name, event.name),
-                "severity": event.severity,
-                "state": t["changed"] if event.changed else t["unchanged"],
+                t["step_name"]: event.name,
+                t["description_label"]: STEP_DESCRIPTIONS[lang].get(event.name, event.name),
+                t["severity_label"]: event.severity,
+                t["change_state"]: t["changed"] if event.changed else t["unchanged"],
             }
             for event in visible_events
         ]
         st.table(rows)
 
         for event in visible_events:
-            if event.note:
-                st.caption(f"{event.name}: {event.note}")
             render_before_after(event, t)
 
 with technical_tab:
@@ -373,7 +401,7 @@ with technical_tab:
             st.metric(t["is_valid"], str(summary["is_valid"]))
             st.metric(t["correlation_id_length"], summary["correlation_id_length"])
         with metric_col_2:
-            st.metric(t["correlation_id"], summary["correlation_id"])
+            st.metric(t["full_correlation_id"], summary["correlation_id"])
             st.metric(t["processed_text_escape"], summary["processed_text_escape"])
 
         st.caption(t["errors"])
